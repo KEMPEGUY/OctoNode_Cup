@@ -1,7 +1,7 @@
 name: Score Submission
 
 on:
-  pull_request_target:
+  pull_request:
     paths:
       - "submissions/**"
 
@@ -11,41 +11,51 @@ permissions:
 jobs:
   score:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Repo
+      # 1️⃣ Checkout MAIN branch (not PR merge commit)
+      - name: Checkout main branch
         uses: actions/checkout@v4
         with:
-          ref: main # Target the main branch where the leaderboard lives
+          ref: main
           fetch-depth: 0
 
-      - name: Get Submission
-        run: |
-          git fetch origin pull/${{ github.event.pull_request.number }}/head:tmp_pr
-          git checkout tmp_pr -- submissions/
-          git checkout main
+      # 2️⃣ Checkout private evaluation repo
+      - name: Checkout private evaluation repo
+        uses: actions/checkout@v4
+        with:
+          repository: El-Ikram/Help_repo
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          path: private_eval
 
-      - name: Evaluate
+      # 3️⃣ Setup Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # 4️⃣ Evaluate submission
+      - name: Evaluate submission
         id: eval
         run: |
-          pip install pandas
-          # Run your scripts
-          python competition/validate_submission.py submissions/submission.csv data/test_target_without_labels.csv
-          SCORE=$(python competition/evaluate.py submissions/submission.csv private_eval/test_labels.csv | grep SCORE | cut -d "=" -f2)
+          SCORE=$(python competition/evaluate.py \
+          submissions/submission.csv \
+          private_eval/test_labels.csv | grep SCORE | cut -d "=" -f2)
           echo "score=$SCORE" >> $GITHUB_OUTPUT
 
-      - name: Update CSV
+      # 5️⃣ Append to leaderboard
+      - name: Append to leaderboard
         run: |
-          # Ensure header exists
-          if [ ! -f leaderboard/leaderboard.csv ]; then
-            echo "team,model,score,timestamp_utc,notes" > leaderboard/leaderboard.csv
-          fi
-          echo "${{ github.actor }},GNN,${{ steps.eval.outputs.score }},$(date -u +"%Y-%m-%dT%H:%M:%SZ"),Auto" >> leaderboard/leaderboard.csv
+          echo "${{ github.actor }},GCN,${{ steps.eval.outputs.score }},$(date -u +"%Y-%m-%dT%H:%M:%SZ"),Auto submission" >> leaderboard/leaderboard.csv
 
-      - name: Commit and Push
+      # 6️⃣ Commit & Push to MAIN safely
+      - name: Commit leaderboard update
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add leaderboard/leaderboard.csv
-          git commit -m "Update score for ${{ github.actor }}"
-          # THIS LINE FIXES THE DETACHED HEAD ERROR
+          git commit -m "Auto-update leaderboard for ${{ github.actor }}" || exit 0
           git push origin HEAD:main
