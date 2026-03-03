@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the PR branch (not forcing main)
+      # 1️⃣ Checkout the PR branch (the branch that triggered the workflow)
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Checkout private evaluation repo
+      # 2️⃣ Checkout private evaluation repo
       - name: Checkout private evaluation repo
         uses: actions/checkout@v4
         with:
@@ -27,40 +27,53 @@ jobs:
           token: ${{ secrets.PRIVATE_REPO_TOKEN }}
           path: private_eval
 
-      # Setup Python
+      # 3️⃣ Setup Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      # Install dependencies
+      # 4️⃣ Install dependencies
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # Find submission file
+      # 5️⃣ Find submission file
       - name: Get submission file
         id: file
         run: |
           FILE=$(find submissions -name "*.enc" | head -n 1)
           echo "file=$FILE" >> $GITHUB_OUTPUT
 
-      # Debug: confirm the submission file exists
-      - name: Debug submission file
+      # 6️⃣ Debug: list submission folder & show file
+      - name: Debug submission folder
         run: |
-          echo "Submission file: ${{ steps.file.outputs.file }}"
+          echo "Contents of submissions folder:"
+          ls -R submissions
+          echo "Submission file detected: ${{ steps.file.outputs.file }}"
 
-      # Decrypt submission safely
+      # 7️⃣ Check that secret is set
+      - name: Check private key secret
+        run: |
+          if [ -z "$SUBMISSION_PRIVATE_KEY" ]; then
+            echo "ERROR: SUBMISSION_PRIVATE_KEY is not set!"
+            exit 1
+          fi
+          echo "Private key secret is set."
+        env:
+          SUBMISSION_PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+
+      # 8️⃣ Decrypt submission safely
       - name: Decrypt submission
         env:
           SUBMISSION_PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
         run: |
           if [ -z "${{ steps.file.outputs.file }}" ]; then
-            echo "No submission file found! Exiting."
+            echo "ERROR: No submission file found!"
             exit 1
           fi
           python encryption/decrypt.py "${{ steps.file.outputs.file }}"
 
-      # Evaluate submission
+      # 9️⃣ Evaluate submission
       - name: Evaluate submission
         id: eval
         run: |
@@ -73,12 +86,12 @@ jobs:
 
           echo "score=$SCORE" >> $GITHUB_OUTPUT
 
-      # Append to leaderboard
+      # 🔟 Append to leaderboard
       - name: Append to leaderboard
         run: |
           echo "${{ github.actor }},${{ steps.eval.outputs.score }},$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> docs/leaderboard.csv
 
-      # Commit leaderboard
+      # 1️⃣1️⃣ Commit leaderboard
       - name: Commit leaderboard
         run: |
           git config user.name "github-actions[bot]"
