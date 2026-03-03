@@ -8,10 +8,10 @@ from cryptography.fernet import Fernet
 
 
 def decrypt_file_content(encrypted_file_path):
-    private_key_pem = os.environ.get("PRIVATE_KEY")
+    private_key_pem = os.environ.get("SUBMISSION_PRIVATE_KEY")
 
     if not private_key_pem:
-        raise ValueError("PRIVATE_KEY missing")
+        raise ValueError("SUBMISSION_PRIVATE_KEY missing")
 
     private_key_pem = private_key_pem.replace("\\n", "\n").strip()
 
