@@ -75,54 +75,13 @@ def generate_markdown(rows):
     MD_PATH.write_text("".join(lines), encoding="utf-8")
 
 
-def generate_html(rows):
-    table_rows = []
-
-    for i, r in enumerate(rows, start=1):
-        table_rows.append(
-            "<tr>"
-            f"<td>{i}</td>"
-            f"<td>{escape(r['team'])}</td>"
-            f"<td>{r['score']:.8f}</td>"
-            f"<td>{r['timestamp_utc']}</td>"
-            "</tr>"
-        )
-
-    html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>OctoNode Cup Leaderboard</title>
-    <link rel="stylesheet" href="leaderboard.css">
-</head>
-<body>
-    <h1>OctoNode Cup Leaderboard</h1>
-    <p>Last updated: {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")}</p>
-    <table>
-        <thead>
-            <tr>
-                <th>Rank</th>
-                <th>Team</th>
-                <th>Score</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            {''.join(table_rows)}
-        </tbody>
-    </table>
-</body>
-</html>
-"""
-
-    HTML_PATH.write_text(html_content, encoding="utf-8")
 
 
 def main():
     rows = read_rows()
     rows = sort_rows(rows)
     generate_markdown(rows)
-    generate_html(rows)
+    
 
 
 if __name__ == "__main__":
