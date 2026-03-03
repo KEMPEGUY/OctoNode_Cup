@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout the PR branch (the branch that triggered the workflow)
+      # 1️⃣ Checkout the PR branch
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -37,21 +37,29 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # 5️⃣ Find submission file
+      # 5️⃣ List all files for debugging
+      - name: List repo files
+        run: |
+          echo "Listing all files in repo recursively:"
+          ls -R
+
+      # 6️⃣ Find submission file recursively
       - name: Get submission file
         id: file
         run: |
-          FILE=$(find submissions -name "*.enc" | head -n 1)
+          FILE=$(find submissions -type f -name "*.enc" | head -n 1)
           echo "file=$FILE" >> $GITHUB_OUTPUT
 
-      # 6️⃣ Debug: list submission folder & show file
-      - name: Debug submission folder
+      # 7️⃣ Debug: confirm submission file
+      - name: Debug submission file
         run: |
-          echo "Contents of submissions folder:"
-          ls -R submissions
           echo "Submission file detected: ${{ steps.file.outputs.file }}"
+          if [ -z "${{ steps.file.outputs.file }}" ]; then
+            echo "ERROR: No .enc file found in submissions folder!"
+            exit 1
+          fi
 
-      # 7️⃣ Check that secret is set
+      # 8️⃣ Check that secret is set
       - name: Check private key secret
         run: |
           if [ -z "$SUBMISSION_PRIVATE_KEY" ]; then
@@ -62,18 +70,14 @@ jobs:
         env:
           SUBMISSION_PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
 
-      # 8️⃣ Decrypt submission safely
+      # 9️⃣ Decrypt submission
       - name: Decrypt submission
         env:
           SUBMISSION_PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
         run: |
-          if [ -z "${{ steps.file.outputs.file }}" ]; then
-            echo "ERROR: No submission file found!"
-            exit 1
-          fi
           python encryption/decrypt.py "${{ steps.file.outputs.file }}"
 
-      # 9️⃣ Evaluate submission
+      # 🔟 Evaluate submission
       - name: Evaluate submission
         id: eval
         run: |
@@ -86,12 +90,12 @@ jobs:
 
           echo "score=$SCORE" >> $GITHUB_OUTPUT
 
-      # 🔟 Append to leaderboard
+      # 1️⃣1️⃣ Append to leaderboard
       - name: Append to leaderboard
         run: |
           echo "${{ github.actor }},${{ steps.eval.outputs.score }},$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> docs/leaderboard.csv
 
-      # 1️⃣1️⃣ Commit leaderboard
+      # 1️⃣2️⃣ Commit leaderboard
       - name: Commit leaderboard
         run: |
           git config user.name "github-actions[bot]"
