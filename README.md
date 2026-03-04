@@ -182,7 +182,6 @@ Think of this as a “from-scratch GNN challenge”, no shortcuts, no pretrained
 
 ## 📤Submission
 Ready to compete? Follow these steps to get your model on the leaderboard 
-* Each participant must fork this repository to their GitHub account.
 * Each participant needs to use the provided starter code as a baseline and implement your GNN model (while respecting all constraints!).
 * After generating predictions on the test set, save them as a CSV file with the required format:\
    id , name , ml_target .
@@ -190,16 +189,10 @@ Ready to compete? Follow these steps to get your model on the leaderboard
     The file contains predictions for all test nodes.\
     The order of IDs matches test_nodes.csv.\
     The file name is your_team_name_submission.csv
-* To ensure fair evaluation, all submissions must be encrypted before being uploaded. Use the provided public key:
- ```
-python encryption/encrypt.py your_team_name_submission.csv encryption/public_key.pem submissions/your_team_name_submission.enc
-```
-This generates: your_team_name_submission.enc
-* Move the encrypted .enc file into the submissions/ folder, commit and push your changes and open a Pull Request to the main repository.
-* Once your Pull Request is opened:\
-    Your submission will be automatically evaluated.\
-    The score will be computed using the hidden test labels.\
-    Your result will be added to the leaderboard.
+* Upload the csv file into the  📋 **Google Form:** [Fill out this Google Form](https://forms.gle/cEsQeycFNYczhLJF8)
+* Your submission will be automatically evaluated.\
+* The score will be computed using the hidden test labels.\
+* Your result will be added to the leaderboard (it might take some time so please be patient).
 
  🌟Higher scores climb higher🌟
   
