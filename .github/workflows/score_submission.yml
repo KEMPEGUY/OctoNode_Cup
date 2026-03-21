@@ -19,6 +19,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
       # Checkout private evaluation repo
       - name: Checkout private evaluation repo
         uses: actions/checkout@v4
