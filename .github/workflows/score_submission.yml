@@ -3,7 +3,7 @@ name: Score Submission
 on:
   pull_request_target:
     paths:
-      - "submissions/**/*.enc"
+      - "submissions/**"
 
 permissions:
   contents: write
