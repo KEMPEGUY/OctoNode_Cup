@@ -119,6 +119,12 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+          git fetch origin main
+          git checkout main
+          git pull origin main --rebase
+      
           git add docs/leaderboard.csv
           git commit -m "Leaderboard update for ${{ github.actor }}" || exit 0
-          git push origin HEAD:main
+      
+          git push origin main
