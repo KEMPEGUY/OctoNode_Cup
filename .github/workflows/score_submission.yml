@@ -42,6 +42,11 @@ jobs:
           token: ${{ secrets.PRIVATE_REPO_TOKEN }}
           path: private_eval
 
+      - name: Debug private repo
+        run: |
+          echo "Listing private_eval:"
+          ls -R private_eval
+ 
       # Setup Python
       - name: Set up Python
         uses: actions/setup-python@v5
